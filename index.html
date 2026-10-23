@@ -1,0 +1,1805 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<meta name="description" content="Teste de câmera, luz, fundo e microfone para professores que gravam aula em casa.">
+<title>Check de Estúdio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Instrument+Sans:wght@400..700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+/* Conceito: sala de controle de estúdio. Painéis separados por réguas finas,
+   leituras em fonte monoespaçada e a instrução principal em letras grandes sobre a imagem. */
+:root {
+  --bg: #EDF0EC;
+  --panel: #FFFFFF;
+  --ink: #12201A;
+  --ink-2: #4A5A52;
+  --line: #D2D9D3;
+  --track: #DDE3DE;
+  --accent: #2455E6;
+  --accent-ink: #FFFFFF;
+  --accent-soft: rgba(36, 85, 230, .16);
+  --ok: #17874F;
+  --warn: #B36A00;
+  --bad: #C9342A;
+  --info: #5A6A62;
+  --ok-soft: #CBE8D6;
+  --warn-soft: #F4E0B6;
+  --bad-soft: #F5C9C3;
+  --ok-bg: #E2F3E9;
+  --warn-bg: #FAEDD3;
+  --bad-bg: #FBE3E0;
+  --stage: #0A0E0C;
+  --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --f-body: "Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: light dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0D1210;
+    --panel: #151B18;
+    --ink: #E7EEEA;
+    --ink-2: #9DADA5;
+    --line: #27312C;
+    --track: #232C28;
+    --accent: #7E9CFF;
+    --accent-ink: #0A1022;
+    --accent-soft: rgba(126, 156, 255, .22);
+    --ok: #4CC38A;
+    --warn: #F0B04A;
+    --bad: #FF7468;
+    --info: #9DADA5;
+    --ok-soft: rgba(76, 195, 138, .28);
+    --warn-soft: rgba(240, 176, 74, .28);
+    --bad-soft: rgba(255, 116, 104, .30);
+    --ok-bg: rgba(76, 195, 138, .12);
+    --warn-bg: rgba(240, 176, 74, .12);
+    --bad-bg: rgba(255, 116, 104, .13);
+    --stage: #050806;
+  }
+}
+
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+[hidden] { display: none !important; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--f-body);
+}
+h1, h2, h3, h4, p, ul, ol { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+button, select, input { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-block: max(20px, env(safe-area-inset-top)) max(56px, env(safe-area-inset-bottom));
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+/* Cabeçalho */
+.mast { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 20px; padding-bottom: 16px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+.brand { display: flex; align-items: center; gap: 12px; }
+.tally { width: 12px; height: 12px; border-radius: 50%; background: var(--track); transition: background .2s, box-shadow .2s; }
+body.cam-on .tally { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.brand h1 { font: 700 clamp(24px, 4vw, 32px)/1.1 var(--f-display); letter-spacing: -.015em; }
+.lede { color: var(--ink-2); font-size: 15px; }
+
+/* Botões e campos */
+.btn {
+  appearance: none; cursor: pointer;
+  background: var(--accent); color: var(--accent-ink);
+  border: 0; border-radius: 4px;
+  padding: 13px 20px; font-weight: 650; font-size: 16px;
+  min-height: 48px;
+}
+.btn:hover { filter: brightness(1.07); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.fld { display: grid; gap: 4px; min-width: 0; }
+.fld > span, .lbl { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); font-weight: 600; }
+select {
+  width: 100%; min-width: 0; max-width: 100%;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 4px;
+  padding: 10px 12px; min-height: 44px;
+}
+.ic {
+  flex: none; width: 24px; height: 24px; border-radius: 50%;
+  display: inline-grid; place-items: center;
+  font: 700 14px/1 var(--f-mono);
+}
+.ic.big { width: 40px; height: 40px; font-size: 22px; }
+.chk--ok .ic, .mi--ok .ic, .sum--ok .ic, .mhead--ok .ic, .banner--ok .ic { background: var(--ok); color: #fff; }
+.chk--warn .ic, .mi--warn .ic, .sum--warn .ic, .mhead--warn .ic, .banner--warn .ic { background: var(--warn); color: #fff; }
+.chk--bad .ic, .mi--bad .ic, .sum--bad .ic, .mhead--bad .ic, .banner--bad .ic { background: var(--bad); color: #fff; }
+.chk--info .ic, .mi--info .ic, .banner--info .ic { background: transparent; color: var(--info); border: 1.5px solid var(--info); }
+@media (prefers-color-scheme: dark) {
+  .chk--ok .ic, .mi--ok .ic, .sum--ok .ic, .mhead--ok .ic, .banner--ok .ic,
+  .chk--warn .ic, .mi--warn .ic, .sum--warn .ic, .mhead--warn .ic, .banner--warn .ic,
+  .chk--bad .ic, .mi--bad .ic, .sum--bad .ic, .mhead--bad .ic, .banner--bad .ic { color: #0A0E0C; }
+}
+
+/* Tela inicial */
+.gate { max-width: 680px; padding: 8px 0 24px; }
+.gate h2 { font: 700 clamp(26px, 5vw, 38px)/1.1 var(--f-display); letter-spacing: -.02em; text-wrap: balance; margin-bottom: 14px; }
+.gate p { color: var(--ink-2); max-width: 60ch; }
+.steps { display: grid; gap: 12px; margin: 24px 0; counter-reset: s; }
+.steps li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; align-items: start; counter-increment: s; }
+.steps li::before { content: counter(s); width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--ink); display: grid; place-items: center; font: 600 15px/1 var(--f-mono); }
+.steps li span { padding-top: 5px; }
+.gate .btn { width: 100%; max-width: 360px; }
+.privacy { margin-top: 14px; font-size: 14px; }
+.err { margin-top: 16px; padding: 12px 14px; border-radius: 4px; background: var(--bad-bg); color: var(--ink); border: 1px solid var(--bad); }
+
+/* Barra de ferramentas */
+.toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; margin-bottom: 16px; align-items: end; }
+.toggles { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.tgl { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; cursor: pointer; font-size: 15px; }
+.tgl input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+
+/* Layout principal */
+.grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 24px 32px; align-items: start; }
+.colStage { min-width: 0; position: sticky; top: max(12px, env(safe-area-inset-top)); }
+.colSide { min-width: 0; }
+
+/* Palco */
+.stage { background: var(--stage); border-radius: 6px; display: grid; place-items: center; overflow: hidden; --maxh: 70vh; }
+.stage:fullscreen { --maxh: 100vh; border-radius: 0; }
+.stage:-webkit-full-screen { --maxh: 100vh; border-radius: 0; }
+.frame { position: relative; width: min(100%, calc(var(--maxh) * var(--ar, 1.7778))); aspect-ratio: var(--ar, 1.7778); background: #000; max-width: 100%; }
+.mirror { position: absolute; inset: 0; }
+.mirror.is-mirrored { transform: scaleX(-1); }
+.mirror video, .mirror canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.mirror video { object-fit: fill; background: #000; }
+.banner {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px 14px;
+  background: rgba(6, 10, 8, .74);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  color: #fff;
+}
+.banner .ic { width: 34px; height: 34px; font-size: 19px; }
+.banner--info .ic { color: #fff; border-color: #fff; }
+#bannerText { font: 650 clamp(18px, 3.2vw, 30px)/1.15 var(--f-display); letter-spacing: -.005em; text-wrap: balance; }
+.level {
+  position: absolute; top: 10px; right: 10px;
+  width: 64px; display: grid; justify-items: center; gap: 2px;
+  padding: 6px 4px 4px; border-radius: 6px;
+  background: rgba(6, 10, 8, .6); color: #fff;
+}
+.level svg { width: 44px; height: 44px; display: block; }
+.level .ring { fill: none; stroke: rgba(255, 255, 255, .45); stroke-width: 1.5; }
+.level .ref { stroke: rgba(255, 255, 255, .35); stroke-width: 1; stroke-dasharray: 2 3; }
+.level .needle { stroke: #fff; stroke-width: 2.5; stroke-linecap: round; }
+.level[data-state="ok"] .needle { stroke: #43d08a; }
+.level[data-state="warn"] .needle { stroke: #f2b13d; }
+.level[data-state="bad"] .needle { stroke: #ff6a5c; }
+.level.na svg { opacity: .35; }
+.level .lt { font: 600 12px/1 var(--f-mono); }
+.fsbtn {
+  position: absolute; top: 10px; left: 10px;
+  appearance: none; cursor: pointer;
+  background: rgba(6, 10, 8, .6); color: #fff;
+  border: 1px solid rgba(255, 255, 255, .3); border-radius: 4px;
+  padding: 6px 10px; font-size: 13px; font-weight: 600; min-height: 32px;
+}
+.camInfo { margin-top: 8px; font: 400 12px/1.4 var(--f-mono); color: var(--ink-2); overflow-wrap: anywhere; }
+
+/* Resumo e lista de dicas */
+.sum { display: flex; gap: 14px; align-items: center; padding: 16px; border-radius: 6px; background: var(--panel); border: 1px solid var(--line); }
+.sum--ok { background: var(--ok-bg); border-color: var(--ok); }
+.sum--warn { background: var(--warn-bg); border-color: var(--warn); }
+.sum--bad { background: var(--bad-bg); border-color: var(--bad); }
+.sum .sumT { font: 700 22px/1.15 var(--f-display); letter-spacing: -.01em; }
+.sum .sumS { font-size: 14px; color: var(--ink-2); }
+.sumBtn { margin-top: 10px; }
+.sumBtn .btn { min-height: 40px; padding: 8px 14px; font-size: 14px; }
+.group h3 { font: 600 12px/1 var(--f-body); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); margin: 24px 0 4px; }
+.chk, .mi { display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+.chk .body, .mi .body { min-width: 0; }
+.t { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 2px 12px; font-weight: 650; }
+.t .v { font: 400 12px/1.4 var(--f-mono); color: var(--ink-2); font-weight: 400; }
+.d { font-size: 14px; color: var(--ink-2); margin-top: 2px; text-wrap: pretty; }
+.a { font-size: 14px; font-weight: 600; margin-top: 6px; }
+.a span { color: var(--accent); margin-right: 2px; }
+.chk--info .t, .chk--ok .t { font-weight: 600; }
+
+/* Microfone */
+.panel { margin-top: 40px; padding-top: 24px; border-top: 2px solid var(--ink); }
+.phead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; margin-bottom: 16px; }
+.phead h2 { font: 700 clamp(22px, 3.4vw, 28px)/1.1 var(--f-display); letter-spacing: -.015em; }
+.dev { font: 400 12px/1.4 var(--f-mono); color: var(--ink-2); overflow-wrap: anywhere; }
+.micGrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px 32px; align-items: start; }
+.meter { position: relative; height: 22px; background: var(--track); border-radius: 3px; overflow: hidden; }
+.meter .target { position: absolute; top: 0; bottom: 0; left: 46.667%; width: 26.667%; background: var(--accent-soft); border-inline: 1px solid var(--accent); }
+.meter .fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--ink-2); transition: width .06s linear; opacity: .9; }
+.meter .fill[data-lv="ok"] { background: var(--ok); }
+.meter .fill[data-lv="warn"] { background: var(--warn); }
+.meter .fill[data-lv="bad"] { background: var(--bad); }
+.meter .peakm { position: absolute; top: 0; bottom: 0; width: 3px; margin-left: -1.5px; background: var(--ink); }
+.mscale { display: flex; justify-content: space-between; font: 400 11px/1 var(--f-mono); color: var(--ink-2); margin-top: 6px; }
+.mrow { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; margin-top: 12px; }
+.mtext { font: 600 18px/1.2 var(--f-mono); min-width: 7.5ch; }
+.hint { font-size: 14px; color: var(--ink-2); flex: 1 1 220px; }
+.testIdle { margin-top: 20px; display: grid; gap: 10px; justify-items: start; }
+.testIdle p { font-size: 14px; color: var(--ink-2); max-width: 52ch; }
+.testRun { margin-top: 20px; padding: 18px; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; }
+.stepHead { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+#stepTitle { font: 700 clamp(24px, 4vw, 32px)/1.1 var(--f-display); letter-spacing: -.015em; }
+#stepTime { font: 600 18px/1 var(--f-mono); }
+#stepSub { margin-top: 6px; color: var(--ink-2); }
+.bar { height: 6px; background: var(--track); border-radius: 3px; margin: 14px 0; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); }
+.readBox { margin: 6px 0 14px; padding: 14px 16px; background: var(--bg); border-radius: 4px; font-size: clamp(18px, 2.6vw, 22px); line-height: 1.5; max-width: 60ch; }
+.mres { min-width: 0; }
+.mhead { display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 6px; border: 1px solid var(--line); background: var(--panel); }
+.mhead--ok { background: var(--ok-bg); border-color: var(--ok); }
+.mhead--warn { background: var(--warn-bg); border-color: var(--warn); }
+.mhead--bad { background: var(--bad-bg); border-color: var(--bad); }
+.mhead .mt { font: 700 22px/1.15 var(--f-display); letter-spacing: -.01em; }
+.mhead .ms { font-size: 14px; color: var(--ink-2); }
+.todo { margin-top: 16px; }
+.todo h4 { font: 600 12px/1 var(--f-body); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 8px; }
+.todo ol { list-style: decimal; padding-left: 22px; display: grid; gap: 6px; }
+.todo li { padding-left: 4px; font-weight: 550; }
+.mitems { margin-top: 16px; }
+.gauge { margin-top: 8px; max-width: 420px; }
+.gtrack { position: relative; height: 8px; border-radius: 2px; overflow: visible; background: var(--track); }
+.seg { position: absolute; top: 0; bottom: 0; }
+.seg--ok { background: var(--ok-soft); } .seg--warn { background: var(--warn-soft); } .seg--bad { background: var(--bad-soft); }
+.gmark { position: absolute; top: -4px; width: 3px; height: 16px; margin-left: -1.5px; background: var(--ink); border-radius: 1px; }
+.gscale { display: flex; justify-content: space-between; margin-top: 8px; font: 400 11px/1 var(--f-mono); color: var(--ink-2); }
+.note { margin-top: 16px; font-size: 13px; color: var(--ink-2); max-width: 64ch; }
+body.testing .toolbar, body.testing .colSide { opacity: .6; }
+
+/* Dicas gerais */
+.tips { margin-top: 40px; border-top: 1px solid var(--line); }
+.tips summary { cursor: pointer; padding: 16px 0; font: 700 20px/1.2 var(--f-display); letter-spacing: -.01em; list-style-position: outside; }
+.tipGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px 28px; padding-bottom: 8px; }
+.tipGrid h3 { font: 600 12px/1 var(--f-body); letter-spacing: .09em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 10px; }
+.tipGrid ul { display: grid; gap: 8px; }
+.tipGrid li { position: relative; padding-left: 16px; font-size: 14px; }
+.tipGrid li::before { content: ""; position: absolute; left: 0; top: .6em; width: 6px; height: 2px; background: var(--ink-2); }
+
+.toast { position: fixed; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translate(-50%, 20px); opacity: 0; pointer-events: none; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 4px; font-size: 14px; max-width: min(92vw, 420px); transition: opacity .2s, transform .2s; z-index: 50; }
+.toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+@media (max-width: 899px) {
+  .grid, .micGrid { grid-template-columns: minmax(0, 1fr); }
+  .colStage { position: static; }
+  .stage { --maxh: 56vh; }
+}
+@media (max-width: 520px) {
+  .toolbar { grid-template-columns: minmax(0, 1fr); }
+  .banner { padding: 10px 12px; }
+  .level { width: 54px; }
+  .level svg { width: 36px; height: 36px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="brand"><span class="tally" aria-hidden="true"></span><h1>Check de Estúdio</h1></div>
+    <p class="lede">Câmera, luz, fundo e microfone conferidos antes de gravar a aula.</p>
+  </header>
+
+  <main>
+    <section id="gate" class="gate" aria-labelledby="gateT">
+      <h2 id="gateT">Confira o seu ambiente antes de gravar</h2>
+      <p>A ferramenta olha a imagem da câmera e escuta o microfone para sugerir ajustes de enquadramento, luz, fundo e áudio.</p>
+      <ol class="steps">
+        <li><span>Permita o uso da câmera e do microfone quando o navegador perguntar.</span></li>
+        <li><span>Posicione o aparelho como vai gravar e siga as dicas que aparecem sobre a imagem.</span></li>
+        <li><span>Faça o teste do microfone, que leva cerca de 25 segundos.</span></li>
+      </ol>
+      <button class="btn" id="btnStart" type="button">Ativar câmera e microfone</button>
+      <p class="privacy">A imagem e o áudio não saem do seu aparelho. No celular, use o Chrome (Android) ou o Safari (iPhone).</p>
+      <p class="err" id="gateError" role="alert" hidden></p>
+    </section>
+
+    <div id="app" hidden>
+      <div class="toolbar">
+        <label class="fld"><span>Câmera</span><select id="selCam"></select></label>
+        <label class="fld"><span>Microfone</span><select id="selMic"></select></label>
+        <div class="toggles">
+          <label class="tgl"><input type="checkbox" id="optMirror" checked><span>Espelhar a prévia</span></label>
+          <label class="tgl"><input type="checkbox" id="optGuides" checked><span>Mostrar guias</span></label>
+          <label class="tgl"><input type="checkbox" id="optVoice"><span>Ler as dicas em voz alta</span></label>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="colStage">
+          <div class="stage" id="stage">
+            <div class="frame" id="frame">
+              <div class="mirror is-mirrored" id="mirror">
+                <video id="video" playsinline muted autoplay></video>
+                <canvas id="overlay"></canvas>
+              </div>
+              <button class="fsbtn" id="btnFull" type="button">Tela cheia</button>
+              <div class="level na" id="level" data-state="na" title="Inclinação do ambiente">
+                <svg viewBox="-30 -30 60 60" aria-hidden="true">
+                  <circle class="ring" r="26"></circle>
+                  <line class="ref" x1="0" y1="-22" x2="0" y2="22"></line>
+                  <g id="levelNeedle" transform="rotate(0)"><line class="needle" x1="0" y1="-20" x2="0" y2="20"></line></g>
+                </svg>
+                <span class="lt" id="levelText">—</span>
+              </div>
+              <div class="banner banner--info" id="banner" role="status" aria-live="polite">
+                <span class="ic" id="bannerIcon" aria-hidden="true">i</span>
+                <span id="bannerText">Analisando a imagem</span>
+              </div>
+            </div>
+          </div>
+          <p class="camInfo" id="camInfo"></p>
+        </div>
+
+        <aside class="colSide" aria-label="Dicas de enquadramento e luz">
+          <div class="sum sum--info" id="sum">
+            <span class="ic big" id="sumIcon" aria-hidden="true">i</span>
+            <div><div class="sumT" id="sumTitle">Analisando</div><div class="sumS" id="sumSub">Fique de frente para a câmera.</div></div>
+          </div>
+          <div class="sumBtn"><button class="btn ghost" id="btnReport" type="button">Copiar relatório</button></div>
+          <div id="checks"></div>
+        </aside>
+      </div>
+
+      <section class="panel" aria-labelledby="micT">
+        <div class="phead"><h2 id="micT">Microfone</h2><span class="dev" id="micDev"></span></div>
+        <div class="micGrid">
+          <div>
+            <div class="lbl" style="margin-bottom:8px">Nível ao vivo</div>
+            <div class="meter" aria-hidden="true"><div class="target"></div><div class="fill" id="mFill" data-lv="lo"></div><div class="peakm" id="mPeak" style="left:0"></div></div>
+            <div class="mscale" aria-hidden="true"><span>−60</span><span>−48</span><span>−36</span><span>−24</span><span>−12</span><span>0</span></div>
+            <div class="mrow"><span class="mtext" id="mText">−∞</span><p class="hint" id="micHint">Fale normalmente. A barra deve ficar dentro da faixa azul, sem encostar no vermelho.</p></div>
+
+            <div class="testIdle" id="testIdle">
+              <button class="btn" id="btnTest" type="button" disabled>Testar o microfone (cerca de 25 s)</button>
+              <p>Mede ruído de fundo, nível da voz, distorção, zumbido e eco. Peça silêncio em casa antes de começar.</p>
+            </div>
+            <div class="testRun" id="testRun" hidden>
+              <div class="stepHead"><h3 id="stepTitle">Prepare-se</h3><span id="stepTime">0 s</span></div>
+              <p id="stepSub"></p>
+              <div class="bar" aria-hidden="true"><i id="stepBar"></i></div>
+              <blockquote class="readBox" id="readBox" hidden style="margin-inline:0">Boa tarde, pessoal. Hoje vamos conversar sobre como organizar o estudo ao longo da semana. Vou falar com calma, fazendo pequenas pausas entre as ideias. Primeiro, o planejamento. Depois, a prática. Por fim, a revisão.</blockquote>
+              <button class="btn ghost" id="btnCancel" type="button">Cancelar</button>
+            </div>
+          </div>
+          <div class="mres" id="micResult" hidden></div>
+        </div>
+      </section>
+
+      <details class="tips">
+        <summary>Dicas gerais de gravação</summary>
+        <div class="tipGrid">
+          <section>
+            <h3>Câmera e enquadramento</h3>
+            <ul>
+              <li>Deixe a câmera na altura dos olhos. Um notebook sobre uma pilha de livros resolve.</li>
+              <li>Enquadre do peito para cima, com os olhos no terço superior da imagem.</li>
+              <li>Mantenha o aparelho firme e nivelado. Tripé ou apoio estável evita a imagem torta.</li>
+              <li>No celular, grave na horizontal.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Luz</h3>
+            <ul>
+              <li>Fique de frente para a janela, ou ponha uma luz suave na sua frente. Nunca com a janela atrás de você.</li>
+              <li>Evite misturar lâmpada amarela com luz do dia.</li>
+              <li>Cortina fina ajuda quando o sol bate direto.</li>
+              <li>Uma luminária de luz branca apontada para a parede à sua frente suaviza as sombras no rosto.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Fundo e distância da parede</h3>
+            <ul>
+              <li>Poucos objetos, organizados. Evite planta, quadro ou luminária logo atrás da cabeça.</li>
+              <li>Fique a cerca de 1 metro da parede, para evitar sombra marcada e dar profundidade.</li>
+              <li>Evite espelhos e janelas aparecendo no fundo.</li>
+              <li>Prefira roupa lisa. Listras finas e xadrez miúdo tremem na imagem.</li>
+            </ul>
+          </section>
+          <section>
+            <h3>Áudio</h3>
+            <ul>
+              <li>Microfone a 20 a 30 cm da boca, um pouco ao lado, fora da linha da respiração.</li>
+              <li>Fone com microfone com fio costuma soar melhor que o microfone do notebook. Evite Bluetooth para gravar.</li>
+              <li>Desligue ventilador e ar-condicionado, feche a janela e silencie as notificações.</li>
+              <li>Cortinas, tapetes e almofadas reduzem o eco.</li>
+            </ul>
+          </section>
+        </div>
+      </details>
+    </div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* =====================================================================
+   CÂMERA: limites ajustáveis e análise de quadro (funções puras)
+   Todos os valores abaixo são heurísticos. Ajuste conforme o seu cenário.
+   ===================================================================== */
+const CAM = {
+  width: 256,                      // largura do quadro reduzido usado na análise
+  faceMinScore: 0.6,               // confiança mínima do detector de rosto
+  eyeLine:    { ok: [0.27, 0.43], warn: [0.20, 0.50] },  // altura dos olhos (0 = topo, 1 = base)
+  faceHeight: { ok: [0.15, 0.34], warn: [0.11, 0.42] },  // altura do rosto / altura do quadro
+  centerX:    { ok: 0.09, warn: 0.18 },                  // desvio do centro / largura
+  lumaFace:   { badLow: 65, warnLow: 90, warnHigh: 185, badHigh: 210 },
+  lumaScene:  { badLow: 50, warnLow: 80, warnHigh: 190, badHigh: 215 },
+  clipLuma: 250,                   // brilho a partir do qual o pixel conta como estourado
+  clipBg:   { warn: 0.06, bad: 0.15 },
+  clipFace: { warn: 0.04, bad: 0.12 },
+  backlight: { diff: 55, bgMin: 140 },
+  faceSides: { warn: 22, bad: 40 }, // diferença de brilho entre os lados do rosto
+  tilt: { ok: 1.5, warn: 3.5, minConf: 0.3, minStrong: 120, magMin: 40 },
+  edgeMag: 25,                     // força mínima de borda para contar como detalhe
+  clutter: { clean: 0.04, warn: 0.09, bad: 0.16 },
+  behindHead: 0.10,
+  cast: { warm: 1.7, cool: 1.25 },
+  minResolution: 1280,
+  minFps: 24
+};
+
+function analyzeFrame(rgba, w, h, face) {
+  const n = w * h;
+  const L = new Float32Array(n);
+  let sr = 0, sg = 0, sb = 0;
+  for (let i = 0, p = 0; i < n; i++, p += 4) {
+    const r = rgba[p], g = rgba[p + 1], b = rgba[p + 2];
+    L[i] = 0.299 * r + 0.587 * g + 0.114 * b;
+    sr += r; sg += g; sb += b;
+  }
+  const rgb = { r: sr / n, g: sg / n, b: sb / n };
+
+  // Região ocupada pela pessoa: coluna do tronco abaixo do topo da cabeça.
+  let px0, px1, headTop, cx, fx0 = 0, fx1 = 0, fy0 = 0, fy1 = 0;
+  let bhx0 = 0, bhx1 = 0, bhy1 = 0, hasBehind = false;
+  if (face) {
+    cx = (face.x + face.w / 2) * w;
+    const half = 1.6 * face.w * w;
+    px0 = cx - half; px1 = cx + half;
+    headTop = (face.y - 0.28 * face.h) * h;
+    fx0 = face.x * w; fx1 = (face.x + face.w) * w;
+    fy0 = face.y * h; fy1 = (face.y + face.h) * h;
+    bhx0 = cx - 1.2 * face.w * w; bhx1 = cx + 1.2 * face.w * w;
+    bhy1 = headTop - 0.02 * h;
+    hasBehind = bhy1 >= 0.10 * h;
+  } else {
+    px0 = 0.22 * w; px1 = 0.78 * w; headTop = 0; cx = w / 2;
+  }
+  const fw = fx1 - fx0, fh = fy1 - fy0;
+  const cX0 = fx0 + 0.2 * fw, cX1 = fx0 + 0.8 * fw, cY0 = fy0 + 0.15 * fh, cY1 = fy0 + 0.85 * fh;
+  const cMid = (cX0 + cX1) / 2;
+  const xc0 = 0.25 * w, xc1 = 0.75 * w, yc0 = 0.2 * h, yc1 = 0.8 * h;
+  const clip = CAM.clipLuma;
+
+  let frameClip = 0, bgN = 0, bgSum = 0, bgClip = 0, ctrN = 0, ctrSum = 0;
+  let faceN = 0, faceSum = 0, faceClip = 0, flN = 0, flS = 0, frN = 0, frS = 0;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const v = L[y * w + x];
+      if (v >= clip) frameClip++;
+      const person = x >= px0 && x <= px1 && y >= headTop;
+      if (!person) { bgN++; bgSum += v; if (v >= clip) bgClip++; }
+      if (x >= xc0 && x < xc1 && y >= yc0 && y < yc1) { ctrN++; ctrSum += v; }
+      if (face && x >= cX0 && x < cX1 && y >= cY0 && y < cY1) {
+        faceN++; faceSum += v; if (v >= clip) faceClip++;
+        if (x < cMid) { flN++; flS += v; } else { frN++; frS += v; }
+      }
+    }
+  }
+
+  // Bordas (Sobel) para poluição visual e inclinação.
+  const T = CAM.edgeMag, TM = CAM.tilt.magMin;
+  const BINS = 180;
+  const hist = new Float64Array(BINS), cnt = new Uint32Array(BINS);
+  let eBgN = 0, eBgE = 0, eLN = 0, eLE = 0, eRN = 0, eRE = 0, eBhN = 0, eBhE = 0;
+  const exX0 = fx0 - 0.3 * fw, exX1 = fx1 + 0.3 * fw, exY0 = fy0 - 0.3 * fh, exY1 = fy1 + 0.3 * fh;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const gx = ((L[i - w + 1] + 2 * L[i + 1] + L[i + w + 1]) - (L[i - w - 1] + 2 * L[i - 1] + L[i + w - 1])) / 4;
+      const gy = ((L[i + w - 1] + 2 * L[i + w] + L[i + w + 1]) - (L[i - w - 1] + 2 * L[i - w] + L[i - w + 1])) / 4;
+      const mag = Math.sqrt(gx * gx + gy * gy);
+      const person = x >= px0 && x <= px1 && y >= headTop;
+      if (!person) {
+        const edge = mag >= T;
+        eBgN++; if (edge) eBgE++;
+        if (x < cx) { eLN++; if (edge) eLE++; } else { eRN++; if (edge) eRE++; }
+        if (hasBehind && x >= bhx0 && x <= bhx1 && y < bhy1) { eBhN++; if (edge) eBhE++; }
+      }
+      if (mag >= TM && !(face && x >= exX0 && x <= exX1 && y >= exY0 && y <= exY1)) {
+        let d = Math.atan2(gy, gx) * 57.29578;
+        d = (((d + 45) % 90) + 90) % 90 - 45;           // dobra para [-45, 45)
+        let b = Math.floor((d + 45) * 2);
+        if (b < 0) b = 0; else if (b > BINS - 1) b = BINS - 1;
+        hist[b] += mag; cnt[b]++;
+      }
+    }
+  }
+
+  // Inclinação: pico do histograma de ângulos dentro de ±25°.
+  const bLo = 40, bHi = 140;
+  let bestB = -1, bestV = 0;
+  for (let b = bLo; b < bHi; b++) {
+    const s = hist[b - 1] + hist[b] + hist[b + 1];
+    if (s > bestV) { bestV = s; bestB = b; }
+  }
+  let tilt = { deg: 0, conf: 0, strong: 0, ok: false };
+  if (bestB >= 0) {
+    let inPeak = 0, wsum = 0, strong = 0, total = 0;
+    for (let b = bLo; b < bHi; b++) total += hist[b];
+    for (let b = bestB - 4; b <= bestB + 4; b++) {
+      const centre = (b + 0.5) / 2 - 45;
+      inPeak += hist[b]; wsum += hist[b] * centre; strong += cnt[b];
+    }
+    const conf = total > 0 ? inPeak / total : 0;
+    const deg = inPeak > 0 ? wsum / inPeak : 0;
+    tilt = { deg, conf, strong, ok: conf >= CAM.tilt.minConf && strong >= CAM.tilt.minStrong };
+  }
+
+  const dens = (e, c) => (c > 0 ? e / c : null);
+  return {
+    rgb,
+    hasFace: !!face,
+    meanCenter: ctrN ? ctrSum / ctrN : 0,
+    faceLuma: faceN ? faceSum / faceN : null,
+    faceL: flN ? flS / flN : null,
+    faceR: frN ? frS / frN : null,
+    bgLuma: bgN ? bgSum / bgN : 0,
+    clipFrame: frameClip / n,
+    clipBg: bgN ? bgClip / bgN : 0,
+    clipFace: faceN ? faceClip / faceN : 0,
+    edge: { bg: dens(eBgE, eBgN), left: dens(eLE, eLN), right: dens(eRE, eRN), behind: dens(eBhE, eBhN) },
+    tilt
+  };
+}
+
+/* ---------- Avaliação: transforma métricas em dicas ---------- */
+const fmt1 = (v) => v.toFixed(1).replace('.', ',');
+const pct = (v) => Math.round(v * 100);
+
+function rangeLevel(v, ok, warn) {
+  if (v >= ok[0] && v <= ok[1]) return 'ok';
+  if (v >= warn[0] && v <= warn[1]) return 'warn';
+  return 'bad';
+}
+
+function evaluateFrame(m, ctx) {
+  const out = [];
+  const mir = !!ctx.mirrored;
+  const side = (raw) => ((raw === 'l') !== mir ? 'esquerda' : 'direita');
+  const opp = (s) => (s === 'esquerda' ? 'direita' : 'esquerda');
+  const lado = (raw) => (side(raw) === 'esquerda' ? 'esquerdo' : 'direito');
+  const add = (id, group, prio, level, title, value, text, action) =>
+    out.push({ id, group, prio, level, title, value, text, action: action || '' });
+  const G1 = 'Enquadramento', G2 = 'Iluminação', G3 = 'Ambiente';
+  const face = ctx.face;
+
+  if (ctx.videoH > ctx.videoW) {
+    add('orient', G1, 0, 'warn', 'Orientação do vídeo', 'vertical',
+      'O vídeo está na vertical. Aulas gravadas costumam ser horizontais (16:9).',
+      'Gire o aparelho para a horizontal');
+  }
+
+  if (ctx.faceState === 'ready') {
+    if (!face) {
+      add('face', G1, 1, 'warn', 'Rosto não encontrado', '—',
+        'Não consegui ver o seu rosto. Fique de frente para a câmera, com o rosto inteiro visível e bem iluminado.',
+        'Fique de frente para a câmera');
+    } else {
+      const eyeY = face.eyeY != null ? face.eyeY : face.y + 0.33 * face.h;
+      const eyeLvl = rangeLevel(eyeY, CAM.eyeLine.ok, CAM.eyeLine.warn);
+      const eyeVal = 'olhos a ' + pct(eyeY) + '% do topo';
+      if (eyeLvl === 'ok') {
+        add('headroom', G1, 7, 'ok', 'Espaço acima da cabeça', eyeVal,
+          'Os olhos estão perto do terço superior da imagem, com boa sobra acima da cabeça.');
+      } else if (eyeY < CAM.eyeLine.ok[0]) {
+        add('headroom', G1, 7, eyeLvl, 'Espaço acima da cabeça', eyeVal,
+          'Há pouca sobra acima da cabeça: você aparece alto demais no quadro.',
+          'Incline a câmera um pouco para cima');
+      } else {
+        add('headroom', G1, 7, eyeLvl, 'Espaço acima da cabeça', eyeVal,
+          'Há espaço demais acima da cabeça: você aparece baixo no quadro.',
+          'Incline a câmera um pouco para baixo');
+      }
+
+      const fh = face.h;
+      const dLvl = rangeLevel(fh, CAM.faceHeight.ok, CAM.faceHeight.warn);
+      const dVal = 'rosto com ' + pct(fh) + '% da altura';
+      if (dLvl === 'ok') {
+        add('distance', G1, 8, 'ok', 'Distância da câmera', dVal,
+          'Bom tamanho: dá para mostrar do peito para cima com o rosto bem legível.');
+      } else if (fh < CAM.faceHeight.ok[0]) {
+        add('distance', G1, 8, dLvl, 'Distância da câmera', dVal,
+          'Você está longe da câmera. O rosto fica pequeno e o fundo ganha destaque demais.',
+          'Aproxime-se da câmera');
+      } else {
+        add('distance', G1, 8, dLvl, 'Distância da câmera', dVal,
+          'Você está perto demais. Os ombros ficam cortados e a imagem parece apertada.',
+          'Afaste-se um pouco da câmera');
+      }
+
+      const dx = face.x + face.w / 2 - 0.5;
+      const cLvl = Math.abs(dx) <= CAM.centerX.ok ? 'ok' : Math.abs(dx) <= CAM.centerX.warn ? 'warn' : 'bad';
+      if (cLvl === 'ok') {
+        add('centering', G1, 9, 'ok', 'Centralização', 'centrado(a)', 'Você está bem centralizado(a) na imagem.');
+      } else {
+        const s = side(dx > 0 ? 'r' : 'l');
+        add('centering', G1, 9, cLvl, 'Centralização', 'mais à ' + s,
+          'Você está deslocado(a) para a ' + s + ' da imagem.',
+          'Mova-se um pouco para a ' + opp(s));
+      }
+
+      if (ctx.faceCount > 1) {
+        add('faces', G1, 15, 'info', 'Mais de um rosto', ctx.faceCount + ' rostos',
+          'Detectei mais de um rosto no quadro. Pode ser outra pessoa, um retrato ou um espelho atrás de você. Confirme se é isso mesmo que quer mostrar.');
+      }
+    }
+  } else if (ctx.faceState === 'loading') {
+    add('facewait', G1, 20, 'info', 'Detector de rosto', 'carregando',
+      'Estou carregando o detector de rosto. Enquanto isso, a análise de luz, fundo e alinhamento já funciona.');
+  } else if (ctx.faceState === 'failed') {
+    add('facewait', G1, 20, 'info', 'Detector de rosto', 'indisponível',
+      'O detector de rosto não carregou (talvez sem internet). A análise de luz, fundo e alinhamento continua, mas as dicas de posição do rosto ficam desligadas.');
+  }
+
+  // Alinhamento (câmera torta)
+  if (m.tilt.ok) {
+    const dDisp = mir ? -m.tilt.deg : m.tilt.deg;
+    const a = Math.abs(dDisp);
+    const lvl = a <= CAM.tilt.ok ? 'ok' : a <= CAM.tilt.warn ? 'warn' : 'bad';
+    if (lvl === 'ok') {
+      add('tilt', G1, 6, 'ok', 'Alinhamento', fmt1(a) + '°', 'As linhas do ambiente estão niveladas.');
+    } else {
+      const dir = dDisp > 0 ? 'direita' : 'esquerda';
+      add('tilt', G1, 6, lvl, 'Alinhamento', fmt1(a) + '° para a ' + dir,
+        'O topo das paredes e móveis está inclinado cerca de ' + Math.round(a) + '° para a ' + dir + ' no vídeo. A câmera ou o notebook não está nivelado.',
+        'Nivele a câmera');
+    }
+  } else {
+    add('tilt', G1, 18, 'info', 'Alinhamento', 'sem referência',
+      'Não há linhas retas suficientes no fundo para medir o alinhamento. Se puder, deixe visível o canto de uma parede, uma porta ou uma estante.');
+  }
+
+  // Qualidade técnica da câmera
+  if (ctx.settings) {
+    const big = Math.max(ctx.settings.width || 0, ctx.settings.height || 0);
+    if (big && big < CAM.minResolution) {
+      add('res', G1, 12, 'warn', 'Resolução da câmera', (ctx.settings.width || '?') + '×' + (ctx.settings.height || '?'),
+        'A câmera está entregando uma imagem de baixa resolução. Tente outra câmera ou melhore a luz, pois muitas câmeras reduzem a qualidade no escuro.',
+        'Tente outra câmera ou mais luz');
+    }
+    if (ctx.settings.frameRate && ctx.settings.frameRate < CAM.minFps) {
+      add('fps', G1, 13, 'warn', 'Fluidez do vídeo', Math.round(ctx.settings.frameRate) + ' fps',
+        'O vídeo está com poucos quadros por segundo, o que costuma acontecer com pouca luz.',
+        'Acenda mais luz');
+    }
+  }
+
+  // Iluminação
+  const useFace = !!face && m.faceLuma != null;
+  const lum = useFace ? m.faceLuma : m.meanCenter;
+  const TH = useFace ? CAM.lumaFace : CAM.lumaScene;
+  const lTitle = useFace ? 'Luz no rosto' : 'Luz na cena';
+  if (lum < TH.warnLow) {
+    const bad = lum < TH.badLow;
+    add('dark', G2, 3, bad ? 'bad' : 'warn', lTitle, 'brilho ' + Math.round(lum),
+      bad ? 'Está muito escuro. A câmera vai gerar imagem com ruído e pouca definição.'
+          : 'A imagem está um pouco escura. Mais luz melhora cor, nitidez e fluidez.',
+      'Acenda mais luz, de frente para você');
+  } else if (lum > TH.warnHigh) {
+    const bad = lum > TH.badHigh;
+    add('dark', G2, 3, bad ? 'bad' : 'warn', lTitle, 'brilho ' + Math.round(lum),
+      bad ? 'A imagem está superexposta: o rosto perde detalhes e fica lavado.'
+          : 'A imagem está um pouco clara demais.',
+      'Reduza a luz sobre o rosto');
+  } else {
+    add('dark', G2, 3, 'ok', lTitle, 'brilho ' + Math.round(lum), 'Brilho adequado, nem escuro nem claro demais.');
+  }
+
+  if (useFace && m.bgLuma - m.faceLuma >= CAM.backlight.diff && m.bgLuma >= CAM.backlight.bgMin) {
+    add('backlight', G2, 2, 'bad', 'Contraluz', 'fundo mais claro que o rosto',
+      'A luz mais forte está atrás de você (janela ou lâmpada) e escurece o seu rosto.',
+      'Fique de frente para a janela ou ponha uma luz na sua frente');
+  }
+
+  const worstClip = Math.max(
+    m.clipBg >= CAM.clipBg.bad ? 2 : m.clipBg >= CAM.clipBg.warn ? 1 : 0,
+    m.clipFace >= CAM.clipFace.bad ? 2 : m.clipFace >= CAM.clipFace.warn ? 1 : 0);
+  if (worstClip > 0) {
+    const faceHot = m.clipFace >= CAM.clipFace.warn;
+    const bgHot = m.clipBg >= CAM.clipBg.warn;
+    const parts = [];
+    if (bgHot) parts.push(pct(m.clipBg) + '% do fundo');
+    if (faceHot) parts.push(pct(m.clipFace) + '% do rosto');
+    add('clip', G2, 4, worstClip === 2 ? 'bad' : 'warn', 'Luz estourando', parts.join(' e '),
+      (bgHot && faceHot) ? 'Há áreas totalmente brancas no fundo e no rosto.'
+        : bgHot ? 'Há áreas totalmente brancas no fundo, provavelmente uma janela ou lâmpada aparecendo.'
+        : 'Há brilho estourado no rosto, sem detalhes.',
+      bgHot ? 'Feche a cortina ou tire a luz forte do quadro' : 'Suavize a luz sobre o rosto');
+  } else {
+    add('clip', G2, 4, 'ok', 'Luz estourando', 'nenhuma', 'Não há áreas totalmente brancas chamando atenção.');
+  }
+
+  if (useFace && m.faceL != null && m.faceR != null) {
+    const diff = Math.abs(m.faceL - m.faceR);
+    const dark = m.faceL < m.faceR ? 'l' : 'r';
+    if (diff >= CAM.faceSides.warn) {
+      add('sides', G2, 5, diff >= CAM.faceSides.bad ? 'bad' : 'warn', 'Luz lateral', 'diferença de ' + Math.round(diff),
+        'O lado ' + lado(dark) + ' do seu rosto está bem mais escuro. A luz vem forte demais de um lado só.',
+        'Acrescente luz do lado ' + lado(dark) + ' do rosto');
+    } else {
+      add('sides', G2, 5, 'ok', 'Luz lateral', 'equilibrada', 'A luz está bem distribuída pelos dois lados do rosto.');
+    }
+  }
+
+  const rb = m.rgb.r / Math.max(m.rgb.b, 1);
+  if (rb > CAM.cast.warm) {
+    add('cast', G2, 14, 'info', 'Cor da luz', 'amarelada',
+      'A imagem está bem amarelada, típico de lâmpada quente. Misturar essa luz com a da janela deixa o tom inconsistente.');
+  } else if (1 / rb > CAM.cast.cool) {
+    add('cast', G2, 14, 'info', 'Cor da luz', 'azulada',
+      'A imagem está azulada, típico de luz fria ou de tela de monitor iluminando o rosto.');
+  }
+
+  // Ambiente
+  const d = m.edge.bg;
+  if (d != null) {
+    const Lq = m.edge.left, Rq = m.edge.right;
+    let busy = null;
+    if (Lq != null && Rq != null && Math.max(Lq, Rq) >= CAM.clutter.clean && Math.max(Lq, Rq) >= 1.5 * Math.min(Lq, Rq)) {
+      busy = Lq > Rq ? 'l' : 'r';
+    }
+    const dv = pct(d) + '% de detalhes';
+    if (d <= CAM.clutter.clean) {
+      add('clutter', G3, 10, 'ok', 'Fundo', dv, 'Fundo limpo e organizado.');
+    } else if (d <= CAM.clutter.warn) {
+      add('clutter', G3, 10, 'ok', 'Fundo', dv, 'Fundo com alguns elementos, ainda organizado.');
+    } else {
+      const bad = d > CAM.clutter.bad;
+      add('clutter', G3, 10, bad ? 'bad' : 'warn', 'Fundo', dv,
+        (bad ? 'Fundo muito carregado: ' : 'Fundo carregado: ') + 'muitos objetos disputam a atenção com você.' +
+          (busy ? ' O lado ' + lado(busy) + ' está mais cheio.' : ''),
+        busy ? 'Tire objetos do lado ' + lado(busy) + ' da imagem' : 'Tire objetos do fundo');
+    }
+  }
+  if (m.edge.behind != null && m.edge.behind >= CAM.behindHead) {
+    add('behind', G3, 11, 'warn', 'Atrás da cabeça', pct(m.edge.behind) + '% de detalhes',
+      'Há objetos logo atrás da sua cabeça (quadro, planta, luminária ou prateleira). Eles podem parecer sair da sua cabeça.',
+      'Mude de lugar o que está atrás da cabeça');
+  }
+  add('wall', G3, 30, 'info', 'Distância da parede', 'dica fixa',
+    'A câmera não mede profundidade. Fique a cerca de 1 metro da parede: evita sombra marcada atrás de você e dá profundidade à imagem.');
+
+  return out;
+}
+
+const LEVEL_RANK = { bad: 3, warn: 2, info: 1, ok: 0 };
+
+function summarize(checks) {
+  const counts = { bad: 0, warn: 0, info: 0, ok: 0 };
+  checks.forEach((c) => { counts[c.level]++; });
+  const issues = checks.filter((c) => (c.level === 'bad' || c.level === 'warn') && c.action);
+  issues.sort((a, b) => LEVEL_RANK[b.level] - LEVEL_RANK[a.level] || a.prio - b.prio);
+  const worst = counts.bad ? 'bad' : counts.warn ? 'warn' : 'ok';
+  return { counts, worst, top: issues[0] || null };
+}
+
+
+/* =====================================================================
+   MICROFONE: limites ajustáveis e análise do teste (funções puras)
+   Os níveis são em dBFS (0 = máximo digital). Valores heurísticos.
+   ===================================================================== */
+const MIC = {
+  frameSec: 0.02,
+  speechMarginDb: 10,       // quadro conta como voz se estiver 10 dB acima do ruído
+  speechFloorDb: -55,
+  clip: 0.99,
+  clipCountBad: 5,
+  trimSilenceSec: 0.3,
+  humShare: 0.02,
+  humPeakDb: 12,
+  rumbleShare: 0.85,
+  rumbleMinNoiseDb: -58,
+  bandSnrDb: 12,
+  zones: {
+    voice: { min: -60, max: 0, z: [[-60, -40, 'bad'], [-40, -32, 'warn'], [-32, -16, 'ok'], [-16, -10, 'warn'], [-10, 0, 'bad']] },
+    peak:  { min: -40, max: 0, z: [[-40, -4, 'ok'], [-4, -1, 'warn'], [-1, 0, 'bad']] },
+    noise: { min: -90, max: -30, z: [[-90, -52, 'ok'], [-52, -42, 'warn'], [-42, -30, 'bad']] },
+    snr:   { min: 0, max: 60, z: [[0, 25, 'bad'], [25, 35, 'warn'], [35, 60, 'ok']] },
+    rt60:  { min: 0, max: 1.5, z: [[0, 0.4, 'ok'], [0.4, 0.7, 'warn'], [0.7, 1.5, 'bad']] },
+    band:  { min: 0, max: 12000, z: [[0, 3500, 'bad'], [3500, 5000, 'warn'], [5000, 12000, 'ok']] }
+  }
+};
+
+const toDb = (p) => 10 * Math.log10(Math.max(p, 1e-18));
+const f0 = (v) => String(Math.round(v)).replace('-', '−');
+const f2 = (v) => v.toFixed(2).replace('.', ',');
+
+function median(a) {
+  if (!a.length) return 0;
+  const s = Array.from(a).sort((x, y) => x - y);
+  const m = s.length >> 1;
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
+}
+
+function framePowers(x, sr, sec) {
+  const N = Math.max(1, Math.round(sr * sec));
+  const nF = Math.floor(x.length / N);
+  const out = new Float64Array(nF);
+  for (let f = 0; f < nF; f++) {
+    let s = 0;
+    for (let i = f * N, e = i + N; i < e; i++) s += x[i] * x[i];
+    out[f] = s / N;
+  }
+  return out;
+}
+
+function fftInPlace(re, im) {
+  const n = re.length;
+  for (let i = 1, j = 0; i < n; i++) {
+    let bit = n >> 1;
+    for (; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if (i < j) {
+      let t = re[i]; re[i] = re[j]; re[j] = t;
+      t = im[i]; im[i] = im[j]; im[j] = t;
+    }
+  }
+  for (let len = 2; len <= n; len <<= 1) {
+    const ang = -2 * Math.PI / len, wlr = Math.cos(ang), wli = Math.sin(ang), hl = len >> 1;
+    for (let i = 0; i < n; i += len) {
+      let wr = 1, wi = 0;
+      for (let k = 0; k < hl; k++) {
+        const a = i + k, b = a + hl;
+        const vr = re[b] * wr - im[b] * wi, vi = re[b] * wi + im[b] * wr;
+        re[b] = re[a] - vr; im[b] = im[a] - vi;
+        re[a] += vr; im[a] += vi;
+        const nwr = wr * wlr - wi * wli; wi = wr * wli + wi * wlr; wr = nwr;
+      }
+    }
+  }
+}
+
+const _hann = {};
+function hann(n) {
+  if (_hann[n]) return _hann[n];
+  const w = new Float64Array(n);
+  for (let i = 0; i < n; i++) w[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (n - 1));
+  return (_hann[n] = w);
+}
+
+function avgSpectrum(x, nfft, hop, accept) {
+  const half = nfft / 2 + 1;
+  const acc = new Float64Array(half);
+  const win = hann(nfft);
+  let wsum = 0;
+  for (let i = 0; i < nfft; i++) wsum += win[i] * win[i];
+  const re = new Float64Array(nfft), im = new Float64Array(nfft);
+  let cnt = 0;
+  for (let s = 0; s + nfft <= x.length; s += hop) {
+    let fp = 0;
+    for (let i = 0; i < nfft; i++) fp += x[s + i] * x[s + i];
+    fp /= nfft;
+    if (accept && !accept(fp)) continue;
+    for (let i = 0; i < nfft; i++) { re[i] = x[s + i] * win[i]; im[i] = 0; }
+    fftInPlace(re, im);
+    for (let k = 0; k < half; k++) acc[k] += (re[k] * re[k] + im[k] * im[k]) / wsum;
+    cnt++;
+  }
+  if (!cnt) return null;
+  for (let k = 0; k < half; k++) acc[k] /= cnt;
+  return { p: acc, binHz: 0, frames: cnt };
+}
+
+function bandPower(P, binHz, a, b) {
+  let s = 0;
+  const k0 = Math.max(1, Math.ceil(a / binHz)), k1 = Math.min(P.length - 1, Math.floor(b / binHz));
+  for (let k = k0; k <= k1; k++) s += P[k];
+  return s;
+}
+
+function tonalPeakDb(P, binHz, f) {
+  const k0 = Math.round(f / binHz);
+  let pk = 0;
+  for (let k = k0 - 1; k <= k0 + 1; k++) pk = Math.max(pk, P[k] || 0);
+  const base = [];
+  for (let k = Math.round((f - 45) / binHz); k <= Math.round((f + 45) / binHz); k++) {
+    if (Math.abs(k - k0) > 3 && P[k] != null && k > 0) base.push(P[k]);
+  }
+  return toDb(pk) - toDb(median(base));
+}
+
+function bandwidthHz(Ps, Pn, binHz, nyq) {
+  let top = 0;
+  for (let fc = 125; fc * 1.1225 < nyq * 0.98 && fc <= 12000; fc *= 1.2599) {
+    const a = fc / 1.1225, b = fc * 1.1225;
+    const s = toDb(bandPower(Ps, binHz, a, b)), n = toDb(bandPower(Pn, binHz, a, b));
+    if (s - n >= MIC.bandSnrDb) top = b;
+  }
+  return top;
+}
+
+/* Tempo de reverberação (RT60) estimado a partir de uma palma. */
+function rt60FromClap(x, sr, noisePow) {
+  let p = 0, pk = 0;
+  for (let i = 0; i < x.length; i++) { const a = Math.abs(x[i]); if (a > pk) { pk = a; p = i; } }
+  const peakDb = 20 * Math.log10(Math.max(pk, 1e-9));
+  if (peakDb - toDb(noisePow) < 30) return { rt60: null, reason: 'quiet' };
+  const preA = Math.max(0, p - Math.round(sr * 0.1)), preB = Math.max(0, p - Math.round(sr * 0.01));
+  if (preB - preA > sr * 0.03) {
+    let pre = 0; for (let i = preA; i < preB; i++) pre += x[i] * x[i]; pre /= (preB - preA);
+    const postN = Math.min(Math.round(sr * 0.01), x.length - p);
+    let post = 0; for (let i = p; i < p + postN; i++) post += x[i] * x[i]; post /= Math.max(postN, 1);
+    if (toDb(post) - toDb(pre) < 15) return { rt60: null, reason: 'notClap' };
+  }
+  const B = Math.max(1, Math.round(sr * 0.002));
+  const maxBlocks = Math.min(Math.floor((x.length - p) / B), Math.round(1.2 / 0.002));
+  const raw = new Float64Array(maxBlocks);
+  for (let k = 0; k < maxBlocks; k++) {
+    let s = 0;
+    for (let i = p + k * B, e = i + B; i < e; i++) s += x[i] * x[i];
+    raw[k] = s / B;
+  }
+  let K = maxBlocks;
+  for (let k = 5; k < maxBlocks - 2; k++) {
+    if ((raw[k] + raw[k + 1] + raw[k + 2]) / 3 <= 2 * noisePow) { K = k; break; }
+  }
+  if (K < 10) return { rt60: null, reason: 'short' };
+  const E = new Float64Array(K);
+  for (let k = 0; k < K; k++) E[k] = Math.max(raw[k] - noisePow, 0);
+  const S = new Float64Array(K);
+  let acc = 0;
+  for (let k = K - 1; k >= 0; k--) { acc += E[k]; S[k] = acc; }
+  if (S[0] <= 0) return { rt60: null, reason: 'short' };
+  const at = (db) => { for (let k = 0; k < K; k++) if (toDb(S[k] / S[0]) <= db) return k; return -1; };
+  const k5 = at(-5), k25 = at(-25), k15 = at(-15);
+  let rt = null;
+  if (k5 >= 0 && k25 > k5) rt = 3 * (k25 - k5) * B / sr;
+  else if (k5 >= 0 && k15 > k5) rt = 6 * (k15 - k5) * B / sr;
+  if (rt == null) return { rt60: null, reason: 'short' };
+  return { rt60: Math.min(rt, 3), reason: 'ok' };
+}
+
+function analyzeMic(rec, sr) {
+  const sil = rec.silence.subarray(Math.min(rec.silence.length, Math.round(sr * MIC.trimSilenceSec)));
+  const sp = rec.speech;
+  const noisePow = median(framePowers(sil, sr, MIC.frameSec));
+  const noiseDb = toDb(noisePow);
+  const spP = framePowers(sp, sr, MIC.frameSec);
+  const thr = Math.max(noiseDb + MIC.speechMarginDb, MIC.speechFloorDb);
+  let act = 0, sum = 0;
+  for (let i = 0; i < spP.length; i++) if (toDb(spP[i]) > thr) { act++; sum += spP[i]; }
+  const activity = spP.length ? act / spP.length : 0;
+  const speechPow = act ? sum / act : 0;
+  const speechDb = act ? toDb(speechPow) : -Infinity;
+  let peak = 0, clipN = 0;
+  for (let i = 0; i < sp.length; i++) {
+    const a = Math.abs(sp[i]);
+    if (a > peak) peak = a;
+    if (a >= MIC.clip) clipN++;
+  }
+  let maxAll = peak;
+  for (let i = 0; i < sil.length; i++) { const a = Math.abs(sil[i]); if (a > maxAll) maxAll = a; }
+  const peakDb = 20 * Math.log10(Math.max(peak, 1e-9));
+
+  const nyq = sr / 2, nfft = 8192, binHz = sr / nfft;
+  const sn = sil.length >= nfft ? avgSpectrum(sil, nfft, nfft / 2) : null;
+  const ss = speechPow > 0 ? avgSpectrum(sp, nfft, nfft / 2, (fp) => fp >= 0.2 * speechPow) : null;
+
+  let hum = { detected: false, freq: 0, peakDb: 0, share: 0 };
+  let rumble = { detected: false, share: 0 };
+  let bandwidth = null;
+  if (sn) {
+    const P = sn.p;
+    const total = bandPower(P, binHz, 20, nyq);
+    let best = null;
+    [50, 60].forEach((f) => {
+      const pd = Math.max(tonalPeakDb(P, binHz, f), tonalPeakDb(P, binHz, 2 * f));
+      if (!best || pd > best.peakDb) best = { freq: f, peakDb: pd };
+    });
+    const share = (bandPower(P, binHz, best.freq - 3, best.freq + 3) + bandPower(P, binHz, 2 * best.freq - 3, 2 * best.freq + 3)) / Math.max(total, 1e-18);
+    hum = { detected: best.peakDb >= MIC.humPeakDb && share >= MIC.humShare, freq: best.freq, peakDb: best.peakDb, share };
+    let lowP = bandPower(P, binHz, 20, 120), allP = total;
+    if (hum.detected) {      // o zumbido já tem aviso próprio: não conta como ruído grave
+      const hb = bandPower(P, binHz, hum.freq - 12, hum.freq + 12) + bandPower(P, binHz, 2 * hum.freq - 12, 2 * hum.freq + 12);
+      lowP = Math.max(lowP - hb, 0); allP = Math.max(allP - hb, 1e-18);
+    }
+    const rshare = lowP / Math.max(allP, 1e-18);
+    rumble = { detected: rshare >= MIC.rumbleShare && noiseDb >= MIC.rumbleMinNoiseDb, share: rshare };
+    if (ss) bandwidth = bandwidthHz(ss.p, P, binHz, nyq);
+  }
+
+  const clap = rt60FromClap(rec.clap, sr, noisePow);
+  return {
+    sr, noiseDb, speechDb, peakDb, clipN, activity, snr: speechDb - noiseDb,
+    hum, rumble, bandwidth, rt60: clap.rt60, rt60Reason: clap.reason,
+    dead: maxAll < 1e-5
+  };
+}
+
+function levelFromZones(v, zones) {
+  if (v < zones[0][0]) return zones[0][2];
+  for (let i = 0; i < zones.length; i++) if (v >= zones[i][0] && v < zones[i][1]) return zones[i][2];
+  return zones[zones.length - 1][2];
+}
+
+function micAssess(res, ctx) {
+  const items = [];
+  const Z = MIC.zones;
+  const gauge = (key, value, minLabel, maxLabel) => ({ min: Z[key].min, max: Z[key].max, zones: Z[key].z, value, minLabel, maxLabel });
+  if (res.dead) return { dead: true, items: [], label: '', score: 0, todo: [] };
+
+  // Nível de voz
+  const silent = res.activity < 0.15 || !isFinite(res.speechDb);
+  let lvl = silent ? 'bad' : levelFromZones(res.speechDb, Z.voice.z);
+  let text, action = '';
+  if (silent) {
+    text = 'Quase não captei a sua voz. Confira se é o microfone certo, se ele não está no mudo e se você falou durante o teste.';
+    action = 'Confira o microfone e repita o teste falando em voz de aula';
+  } else if (lvl === 'ok') {
+    text = 'Bom nível de voz para gravação.';
+  } else if (res.speechDb < -32) {
+    text = 'A voz está baixa. Isso deixa o ruído de fundo mais audível depois de amplificar o áudio.';
+    action = 'Aproxime o microfone (20 a 30 cm da boca) ou aumente o volume de entrada';
+  } else {
+    text = 'A voz está alta e perto de distorcer.';
+    action = 'Afaste um pouco o microfone ou reduza o volume de entrada';
+  }
+  items.push({ key: 'voice', title: 'Nível da voz', value: silent ? '—' : f0(res.speechDb) + ' dBFS', level: lvl, text, action,
+    gauge: gauge('voice', silent ? Z.voice.min : res.speechDb, '−60', '0 dBFS') });
+
+  // Picos e distorção
+  const clipBad = res.clipN >= MIC.clipCountBad;
+  lvl = clipBad ? 'bad' : levelFromZones(res.peakDb, Z.peak.z);
+  items.push({ key: 'peak', title: 'Picos e distorção', value: f0(res.peakDb) + ' dBFS', level: lvl,
+    text: lvl === 'ok' ? 'Sem distorção nos picos de voz.'
+      : lvl === 'warn' ? 'Os picos chegam perto do limite. Qualquer risada ou ênfase pode distorcer.'
+      : 'A voz chegou a distorcer (clipping), e isso não tem conserto depois.',
+    action: lvl === 'ok' ? '' : 'Reduza o volume de entrada e evite falar muito perto do microfone',
+    gauge: gauge('peak', res.peakDb, '−40', '0 dBFS') });
+
+  // Ruído de fundo
+  lvl = levelFromZones(res.noiseDb, Z.noise.z);
+  items.push({ key: 'noise', title: 'Ruído de fundo', value: f0(res.noiseDb) + ' dBFS', level: lvl,
+    text: lvl === 'ok' ? 'Ambiente silencioso.'
+      : lvl === 'warn' ? 'Há ruído de fundo perceptível no silêncio do ambiente.'
+      : 'O ruído de fundo está alto e vai competir com a sua voz.',
+    action: lvl === 'ok' ? '' : 'Desligue ventilador, ar-condicionado ou o que fizer barulho e feche janelas',
+    gauge: gauge('noise', res.noiseDb, '−90', '−30 dBFS') });
+
+  // Relação voz/ruído
+  if (!silent) {
+    lvl = levelFromZones(res.snr, Z.snr.z);
+    items.push({ key: 'snr', title: 'Voz contra ruído', value: f0(res.snr) + ' dB', level: lvl,
+      text: lvl === 'ok' ? 'A voz se destaca bem do ruído.'
+        : lvl === 'warn' ? 'A voz se separa pouco do ruído de fundo.'
+        : 'A voz quase se mistura ao ruído de fundo.',
+      action: lvl === 'ok' ? '' : 'Chegue mais perto do microfone e reduza o ruído do ambiente',
+      gauge: gauge('snr', res.snr, '0', '60 dB') });
+  }
+
+  // Zumbido elétrico
+  items.push({ key: 'hum', title: 'Zumbido elétrico', value: res.hum.detected ? res.hum.freq + ' Hz' : 'não detectado',
+    level: res.hum.detected ? 'warn' : 'ok',
+    text: res.hum.detected ? 'Há um zumbido constante de ' + res.hum.freq + ' Hz, típico de interferência da rede elétrica.' : 'Sem zumbido elétrico.',
+    action: res.hum.detected ? 'Afaste o microfone de carregadores, fontes e dimmers e tente outra tomada' : '' });
+
+  // Ruído grave
+  items.push({ key: 'rumble', title: 'Ruído grave', value: res.rumble.detected ? 'presente' : 'não detectado',
+    level: res.rumble.detected ? 'warn' : 'ok',
+    text: res.rumble.detected ? 'Há um ruído grave constante, típico de ventilador, ar-condicionado, geladeira ou trânsito.' : 'Sem ruído grave constante.',
+    action: res.rumble.detected ? 'Desligue a fonte do ruído ou use um microfone mais perto da boca (headset)' : '' });
+
+  // Eco
+  if (res.rt60 != null) {
+    lvl = levelFromZones(res.rt60, Z.rt60.z);
+    items.push({ key: 'echo', title: 'Eco do ambiente', value: f2(res.rt60) + ' s', level: lvl,
+      text: lvl === 'ok' ? 'Pouco eco: o ambiente absorve bem o som.'
+        : lvl === 'warn' ? 'Há eco perceptível, que deixa a voz mais distante.'
+        : 'Há muito eco, típico de sala vazia ou com muita parede lisa.',
+      action: lvl === 'ok' ? '' : 'Use cortinas, tapetes, almofadas ou estante com livros, e chegue mais perto do microfone',
+      gauge: gauge('rt60', res.rt60, '0', '1,5 s') });
+  } else {
+    items.push({ key: 'echo', title: 'Eco do ambiente', value: 'não medido', level: 'info',
+      text: res.rt60Reason === 'quiet' ? 'Não ouvi a palma com clareza. Bata uma palma forte, perto do microfone, na próxima vez.'
+        : res.rt60Reason === 'notClap' ? 'O som captado não pareceu uma palma seca. Bata uma palma curta e forte e fique em silêncio.'
+        : 'Não consegui estimar o eco com essa palma. Tente de novo com uma palma curta e forte.',
+      action: '' });
+  }
+
+  // Timbre
+  if (res.bandwidth != null && !silent) {
+    lvl = levelFromZones(res.bandwidth, Z.band.z);
+    const khz = f2(res.bandwidth / 1000).replace(',00', '').replace(/(,\d)0$/, '$1');
+    items.push({ key: 'band', title: 'Agudos da voz', value: 'até ' + khz + ' kHz', level: lvl,
+      text: lvl === 'ok' ? 'O som tem boa riqueza de agudos.'
+        : lvl === 'warn' ? 'O som está um pouco abafado.'
+        : 'O som está bem abafado ou estreito, comum em microfone Bluetooth ou muito distante.',
+      action: lvl === 'ok' ? '' : 'Confira se nada cobre o microfone, aponte-o para a boca e prefira microfone com fio ou USB',
+      gauge: gauge('band', res.bandwidth, '0', '12 kHz') });
+  }
+
+  let score = 100;
+  items.forEach((it) => { if (it.level === 'bad') score -= 22; else if (it.level === 'warn') score -= 9; });
+  score = Math.max(0, score);
+  const label = score >= 85 ? 'Muito bom' : score >= 70 ? 'Bom' : score >= 50 ? 'Regular' : 'Precisa melhorar';
+  const worst = score >= 70 ? 'ok' : score >= 50 ? 'warn' : 'bad';
+  const todo = items.filter((it) => (it.level === 'bad' || it.level === 'warn') && it.action)
+    .sort((a, b) => (a.level === b.level ? 0 : a.level === 'bad' ? -1 : 1));
+  return { dead: false, items, label, score, worst, todo };
+}
+
+
+/* =====================================================================
+   APLICATIVO: câmera, microfone, interface e teste guiado
+   ===================================================================== */
+(() => {
+  'use strict';
+
+  const MP_BASE = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14';
+  const MP_MODEL = 'https://storage.googleapis.com/mediapipe-models/face_detector/blaze_face_short_range/float16/1/blaze_face_short_range.tflite';
+  const STEPS = { prep: 1500, silence: 4000, clap: 3500, speech: 14000 };
+
+  const $ = (id) => document.getElementById(id);
+  const video = $('video');
+  const S = {
+    vTrack: null, aTrack: null, aStream: null,
+    ctx: null, srcNode: null, recNode: null,
+    mirrored: true, guides: true, voice: false, running: false,
+    faceState: 'off', detector: null, face: null, faceCount: 0, faceMiss: 0, lastTs: 0,
+    videoW: 0, videoH: 0, tilt: null,
+    stable: {}, byLevel: {}, checks: [], sum: null, sig: '',
+    live: { db: -90, at: 0 }, peakHold: -90, peakHoldAt: 0,
+    rec: null, testing: false, cancel: false, micRes: null, micAss: null,
+    lastSpoken: '', lastSpokeAt: 0, wakeLock: null, startAt: performance.now(),
+    work: document.createElement('canvas'), wctx: null
+  };
+
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const GLYPH = { ok: '✓', warn: '!', bad: '×', info: 'i' };
+  const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+  const gum = (c) => navigator.mediaDevices.getUserMedia(c);
+
+  const setText = (el, t) => { if (el.textContent !== t) el.textContent = t; };
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('toast');
+    t.textContent = msg; t.classList.add('on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('on'), 3200);
+  }
+
+  function explainError(e) {
+    const n = e && e.name;
+    if (n === 'NotAllowedError' || n === 'SecurityError') return 'A permissão foi negada. Toque no cadeado ao lado do endereço da página, permita câmera e microfone e recarregue.';
+    if (n === 'NotFoundError' || n === 'OverconstrainedError') return 'Não encontrei câmera ou microfone neste aparelho. Conecte o dispositivo e tente de novo.';
+    if (n === 'NotReadableError' || n === 'AbortError') return 'Não consegui usar o dispositivo. Outro aplicativo (Teams, Zoom, OBS ou a câmera do sistema) pode estar usando. Feche-o e tente de novo.';
+    return 'Não foi possível iniciar a câmera e o microfone' + (n ? ' (' + n + ')' : '') + '.';
+  }
+
+  /* ---------------- Início ---------------- */
+  function videoConstraints(deviceId) {
+    const c = { width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } };
+    if (deviceId) c.deviceId = { exact: deviceId }; else c.facingMode = 'user';
+    return c;
+  }
+  function audioConstraints(deviceId) {
+    const c = { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 };
+    if (deviceId) c.deviceId = { exact: deviceId };
+    return c;
+  }
+
+  function gateError(msg) {
+    const el = $('gateError');
+    el.textContent = msg; el.hidden = !msg;
+  }
+
+  async function startAll() {
+    gateError('');
+    if (!window.isSecureContext || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      gateError('Este navegador só libera câmera e microfone em páginas HTTPS (ou abertas direto no computador). Abra o endereço seguro da ferramenta no Chrome, Edge ou Safari, fora de aplicativos como WhatsApp ou Instagram.');
+      return;
+    }
+    $('btnStart').disabled = true;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) { S.ctx = new AC({ latencyHint: 'interactive' }); if (S.ctx.resume) S.ctx.resume(); }
+    } catch (_) { S.ctx = null; }
+
+    let stream = null, noMic = null, noCam = null;
+    try {
+      stream = await gum({ video: videoConstraints(), audio: audioConstraints() });
+    } catch (e) {
+      if (e && (e.name === 'NotAllowedError' || e.name === 'SecurityError')) { gateError(explainError(e)); $('btnStart').disabled = false; return; }
+      try { stream = await gum({ video: videoConstraints() }); noMic = e; }
+      catch (e2) {
+        try { stream = await gum({ audio: audioConstraints() }); noCam = e2; }
+        catch (_) { gateError(explainError(e2)); $('btnStart').disabled = false; return; }
+      }
+    }
+
+    $('gate').hidden = true;
+    $('app').hidden = false;
+    document.body.classList.add('live');
+
+    const vt = stream.getVideoTracks()[0], at = stream.getAudioTracks()[0];
+    if (vt) attachVideo(vt); else $('camInfo').textContent = 'Câmera indisponível. ' + explainError(noCam);
+    if (at) await attachAudio(at); else micUnavailable(noMic);
+    await refreshDevices();
+    requestWakeLock();
+    S.running = true;
+    initFace();
+    S.startAt = performance.now();
+    requestAnimationFrame(loop);
+    requestAnimationFrame(meterFrame);
+  }
+
+  function micUnavailable(err) {
+    $('micDev').textContent = 'Microfone indisponível';
+    $('btnTest').disabled = true;
+    $('micHint').textContent = err ? explainError(err) : 'Nenhum microfone encontrado.';
+  }
+
+  /* ---------------- Câmera ---------------- */
+  function attachVideo(vt) {
+    if (S.vTrack && S.vTrack !== vt) S.vTrack.stop();
+    S.vTrack = vt;
+    video.srcObject = new MediaStream([vt]);
+    const p = video.play(); if (p && p.catch) p.catch(() => {});
+    const st = vt.getSettings();
+    S.mirrored = st.facingMode !== 'environment';
+    $('optMirror').checked = S.mirrored;
+    applyMirror();
+    S.face = null; S.faceMiss = 0; S.faceCount = 0; S.stable = {}; S.byLevel = {}; S.sig = '';
+    document.body.classList.add('cam-on');
+    vt.addEventListener('ended', () => toast('A câmera foi desconectada.'));
+  }
+
+  function applyMirror() { $('mirror').classList.toggle('is-mirrored', S.mirrored); }
+
+  function onVideoSize() {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh) return;
+    S.videoW = vw; S.videoH = vh;
+    $('frame').style.setProperty('--ar', (vw / vh).toFixed(4));
+  }
+  video.addEventListener('loadedmetadata', onVideoSize);
+  video.addEventListener('resize', onVideoSize);
+
+  async function refreshDevices() {
+    let list = [];
+    try { list = await navigator.mediaDevices.enumerateDevices(); } catch (_) {}
+    fillSelect($('selCam'), list.filter((d) => d.kind === 'videoinput'), 'Câmera', S.vTrack);
+    fillSelect($('selMic'), list.filter((d) => d.kind === 'audioinput'), 'Microfone', S.aTrack);
+  }
+  function fillSelect(sel, devs, name, track) {
+    sel.innerHTML = '';
+    const cur = track && track.getSettings().deviceId;
+    devs.forEach((d, i) => {
+      const o = document.createElement('option');
+      o.value = d.deviceId; o.textContent = d.label || (name + ' ' + (i + 1));
+      if (d.deviceId === cur) o.selected = true;
+      sel.appendChild(o);
+    });
+    if (!devs.length) {
+      const o = document.createElement('option'); o.textContent = 'Nenhum encontrado'; sel.appendChild(o);
+    }
+    sel.disabled = !devs.length;
+  }
+
+  /* ---------------- Detector de rosto ---------------- */
+  async function initFace() {
+    S.faceState = 'loading';
+    try {
+      const mod = await import(MP_BASE + '/vision_bundle.mjs');
+      const fileset = await mod.FilesetResolver.forVisionTasks(MP_BASE + '/wasm');
+      const make = (delegate) => mod.FaceDetector.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: MP_MODEL, delegate }, runningMode: 'VIDEO', minDetectionConfidence: 0.5
+      });
+      try { S.detector = await make('GPU'); } catch (_) { S.detector = await make('CPU'); }
+      S.faceState = 'ready';
+    } catch (e) {
+      console.warn('Detector de rosto indisponível:', e);
+      S.faceState = 'failed';
+    }
+  }
+
+  function detectFace() {
+    if (S.faceState !== 'ready' || video.readyState < 2 || !video.videoWidth) return;
+    let res;
+    try {
+      const ts = Math.max(performance.now(), S.lastTs + 1);
+      S.lastTs = ts;
+      res = S.detector.detectForVideo(video, ts);
+    } catch (_) { return; }
+    const vw = video.videoWidth, vh = video.videoHeight;
+    const list = (res.detections || [])
+      .filter((d) => d.boundingBox && d.categories && d.categories[0] && d.categories[0].score >= CAM.faceMinScore)
+      .map((d) => {
+        const b = d.boundingBox, kp = d.keypoints || [];
+        return {
+          x: b.originX / vw, y: b.originY / vh, w: b.width / vw, h: b.height / vh,
+          eyeY: kp.length >= 2 ? (kp[0].y + kp[1].y) / 2 : null
+        };
+      })
+      .sort((a, b) => b.w * b.h - a.w * a.h);
+    if (list.length) {
+      const f = list[0];
+      S.faceMiss = 0;
+      S.faceCount = list.filter((d) => d.w * d.h >= 0.25 * f.w * f.h).length;
+      if (S.face) {
+        const k = 0.4;
+        S.face = {
+          x: S.face.x + (f.x - S.face.x) * k, y: S.face.y + (f.y - S.face.y) * k,
+          w: S.face.w + (f.w - S.face.w) * k, h: S.face.h + (f.h - S.face.h) * k,
+          eyeY: f.eyeY == null ? S.face.eyeY : (S.face.eyeY == null ? f.eyeY : S.face.eyeY + (f.eyeY - S.face.eyeY) * k)
+        };
+      } else S.face = f;
+    } else if (++S.faceMiss >= 8) { S.face = null; S.faceCount = 0; }
+  }
+
+  /* ---------------- Análise e dicas ---------------- */
+  function applyStable(raw) {
+    const seen = {};
+    raw.forEach((c) => {
+      seen[c.id] = true;
+      const st = S.stable[c.id] || (S.stable[c.id] = { level: c.level, pend: 0, gone: 0 });
+      const bl = S.byLevel[c.id] || (S.byLevel[c.id] = {});
+      bl[c.level] = c; st.gone = 0;
+      if (c.level === st.level) st.pend = 0;
+      else if (++st.pend >= 3) { st.level = c.level; st.pend = 0; }
+    });
+    Object.keys(S.stable).forEach((id) => {
+      if (!seen[id] && ++S.stable[id].gone >= 3) { delete S.stable[id]; delete S.byLevel[id]; }
+    });
+    S.checks = raw.map((c) => {
+      const bl = S.byLevel[c.id], st = S.stable[c.id];
+      return bl && bl[st.level] ? bl[st.level] : c;
+    });
+  }
+
+  function analyze() {
+    const vw = video.videoWidth, vh = video.videoHeight;
+    if (!vw || !vh || video.readyState < 2) return;
+    if (vw !== S.videoW || vh !== S.videoH) onVideoSize();
+    const w = CAM.width, h = Math.max(36, Math.round(w * vh / vw));
+    const cv = S.work;
+    if (cv.width !== w || cv.height !== h) {
+      cv.width = w; cv.height = h;
+      S.wctx = cv.getContext('2d', { willReadFrequently: true });
+      S.wctx.imageSmoothingQuality = 'high';
+    }
+    S.wctx.drawImage(video, 0, 0, w, h);
+    const img = S.wctx.getImageData(0, 0, w, h);
+    const m = analyzeFrame(img.data, w, h, S.face);
+    const settings = S.vTrack ? S.vTrack.getSettings() : null;
+    S.tilt = m.tilt;
+    applyStable(evaluateFrame(m, {
+      mirrored: S.mirrored, videoW: vw, videoH: vh,
+      faceState: S.faceState === 'off' ? 'loading' : S.faceState,
+      face: S.face, faceCount: S.faceCount, settings
+    }));
+    S.sum = summarize(S.checks);
+    if (settings) {
+      const fps = settings.frameRate ? ' · ' + Math.round(settings.frameRate) + ' fps' : '';
+      $('camInfo').textContent = (S.vTrack.label || 'Câmera') + ' · ' + (settings.width || vw) + '×' + (settings.height || vh) + fps;
+    }
+    render();
+  }
+
+  const GROUPS = ['Enquadramento', 'Iluminação', 'Ambiente'];
+
+  function render() {
+    const sum = S.sum;
+    if (!sum) return;
+    const sig = JSON.stringify([S.checks.map((c) => [c.id, c.level, c.text]), sum.top && sum.top.id]);
+    const changed = sig !== S.sig;
+    S.sig = sig;
+    renderTilt();
+    drawOverlay();
+    if (!changed) { updateValues(); return; }
+
+    // Resumo
+    const box = $('sum');
+    box.className = 'sum sum--' + sum.worst;
+    $('sumIcon').textContent = GLYPH[sum.worst];
+    const issues = sum.counts.bad + sum.counts.warn;
+    $('sumTitle').textContent = sum.worst === 'ok' ? 'Pronto para gravar' : sum.worst === 'warn' ? 'Alguns ajustes sugeridos' : 'Ajustes importantes pendentes';
+    $('sumSub').textContent = issues === 0 ? 'Enquadramento, luz e fundo sem problemas.' : issues + (issues === 1 ? ' ponto precisa de atenção.' : ' pontos precisam de atenção.');
+
+    // Faixa principal sobre o vídeo
+    let text, lvl;
+    if (sum.top) { text = sum.top.action; lvl = sum.top.level; }
+    else if (sum.worst === 'ok') { text = 'Enquadramento e luz estão bons'; lvl = 'ok'; }
+    else { text = 'Analisando a imagem'; lvl = 'info'; }
+    const bn = $('banner');
+    bn.className = 'banner banner--' + lvl;
+    $('bannerIcon').textContent = GLYPH[lvl];
+    $('bannerText').textContent = text;
+    maybeSpeak(text, lvl);
+
+    // Lista
+    const order = (a, b) => LEVEL_RANK[b.level] - LEVEL_RANK[a.level] || a.prio - b.prio;
+    $('checks').innerHTML = GROUPS.map((g) => {
+      const rows = S.checks.filter((c) => c.group === g).sort(order);
+      if (!rows.length) return '';
+      return '<section class="group"><h3>' + esc(g) + '</h3><ul>' + rows.map((c) =>
+        '<li class="chk chk--' + c.level + '"><span class="ic" aria-hidden="true">' + GLYPH[c.level] + '</span>' +
+        '<div class="body"><div class="t"><span>' + esc(c.title) + '</span><span class="v" data-id="' + esc(c.id) + '">' + esc(c.value) + '</span></div>' +
+        '<p class="d">' + esc(c.text) + '</p>' +
+        (c.action && (c.level === 'warn' || c.level === 'bad') ? '<p class="a"><span aria-hidden="true">→</span> ' + esc(c.action) + '</p>' : '') +
+        '</div></li>').join('') + '</ul></section>';
+    }).join('');
+  }
+
+  function updateValues() {
+    const root = $('checks');
+    S.checks.forEach((c) => {
+      const el = root.querySelector('.v[data-id="' + c.id + '"]');
+      if (el && el.textContent !== c.value) el.textContent = c.value;
+    });
+  }
+
+  function renderTilt() {
+    const t = S.tilt, el = $('level');
+    if (!t || !t.ok) { el.classList.add('na'); $('levelNeedle').setAttribute('transform', 'rotate(0)'); $('levelText').textContent = '—'; el.dataset.state = 'na'; return; }
+    const deg = S.mirrored ? -t.deg : t.deg;
+    el.classList.remove('na');
+    $('levelNeedle').setAttribute('transform', 'rotate(' + clamp(deg * 3, -40, 40).toFixed(1) + ')');
+    $('levelText').textContent = fmt1(Math.abs(deg)) + '°';
+    el.dataset.state = Math.abs(deg) <= CAM.tilt.ok ? 'ok' : Math.abs(deg) <= CAM.tilt.warn ? 'warn' : 'bad';
+  }
+
+  function maybeSpeak(text, lvl) {
+    if (!S.voice || S.testing || !('speechSynthesis' in window)) return;
+    const spoken = lvl === 'ok' || lvl === 'info' ? '' : text;
+    if (!spoken || spoken === S.lastSpoken) { if (!spoken) S.lastSpoken = ''; return; }
+    const now = Date.now();
+    if (now - S.lastSpokeAt < 3500) return;
+    S.lastSpoken = spoken; S.lastSpokeAt = now;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(spoken);
+      u.lang = 'pt-BR'; u.rate = 1.02;
+      window.speechSynthesis.speak(u);
+    } catch (_) {}
+  }
+
+  /* ---------------- Guias sobre o vídeo ---------------- */
+  const LCOLOR = { ok: '#43d08a', warn: '#f2b13d', bad: '#ff6a5c' };
+  function drawOverlay() {
+    const cv = $('overlay');
+    const w = cv.clientWidth, h = cv.clientHeight;
+    if (!w || !h) return;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+    const g = cv.getContext('2d');
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    g.clearRect(0, 0, w, h);
+    if (S.guides) {
+      g.lineWidth = 1; g.strokeStyle = 'rgba(255,255,255,.28)';
+      g.beginPath();
+      [1 / 3, 2 / 3].forEach((f) => { g.moveTo(w * f, 0); g.lineTo(w * f, h); g.moveTo(0, h * f); g.lineTo(w, h * f); });
+      g.stroke();
+      const Ht = 0.24 * h, Wt = 0.85 * Ht, cx = w / 2, top = 0.27 * h;
+      g.setLineDash([6, 5]); g.lineWidth = 1.5; g.strokeStyle = 'rgba(255,255,255,.62)';
+      g.beginPath();
+      if (g.roundRect) g.roundRect(cx - Wt / 2, top, Wt, Ht, Wt * 0.35); else g.rect(cx - Wt / 2, top, Wt, Ht);
+      g.stroke();
+      const sh = 1.55 * Wt, neck = 0.57 * h;
+      g.beginPath();
+      g.moveTo(cx - sh, h); g.bezierCurveTo(cx - sh, 0.78 * h, cx - 0.9 * Wt, 0.66 * h, cx - 0.3 * Wt, neck);
+      g.moveTo(cx + sh, h); g.bezierCurveTo(cx + sh, 0.78 * h, cx + 0.9 * Wt, 0.66 * h, cx + 0.3 * Wt, neck);
+      g.stroke();
+      g.setLineDash([]);
+      g.beginPath(); g.moveTo(cx - Wt * 0.9, 0.35 * h); g.lineTo(cx - Wt * 0.62, 0.35 * h); g.moveTo(cx + Wt * 0.62, 0.35 * h); g.lineTo(cx + Wt * 0.9, 0.35 * h); g.stroke();
+    }
+    if (S.face) {
+      const ids = { headroom: 1, distance: 1, centering: 1 };
+      let worst = 'ok';
+      S.checks.forEach((c) => { if (ids[c.id] && LEVEL_RANK[c.level] > LEVEL_RANK[worst]) worst = c.level; });
+      g.strokeStyle = LCOLOR[worst] || LCOLOR.ok; g.lineWidth = 2.5; g.setLineDash([]);
+      g.strokeRect(S.face.x * w, S.face.y * h, S.face.w * w, S.face.h * h);
+      if (S.face.eyeY != null) {
+        g.lineWidth = 2; g.beginPath();
+        g.moveTo(S.face.x * w - 6, S.face.eyeY * h); g.lineTo((S.face.x + S.face.w) * w + 6, S.face.eyeY * h); g.stroke();
+      }
+    }
+  }
+  new ResizeObserver(() => drawOverlay()).observe($('frame'));
+
+  /* ---------------- Loop principal ---------------- */
+  let tFace = 0, tAn = 0;
+  function loop(t) {
+    requestAnimationFrame(loop);
+    if (!S.running || document.hidden) return;
+    if (t - tFace > 110) { tFace = t; detectFace(); drawOverlay(); }
+    if (t - tAn > 250) { tAn = t; analyze(); }
+  }
+
+  /* ---------------- Microfone ---------------- */
+  async function ensureRecorder() {
+    if (S.recNode || !S.ctx) return;
+    try {
+      if (!S.ctx.audioWorklet) throw new Error('sem worklet');
+      const code = "class R extends AudioWorkletProcessor{constructor(){super();this.b=new Float32Array(2048);this.n=0}" +
+        "process(i){const c=i[0]&&i[0][0];if(c){for(let k=0;k<c.length;k++){this.b[this.n++]=c[k];" +
+        "if(this.n===2048){this.port.postMessage(this.b);this.b=new Float32Array(2048);this.n=0}}}return true}}" +
+        "registerProcessor('rec-proc',R)";
+      const url = URL.createObjectURL(new Blob([code], { type: 'application/javascript' }));
+      await S.ctx.audioWorklet.addModule(url);
+      URL.revokeObjectURL(url);
+      const node = new AudioWorkletNode(S.ctx, 'rec-proc', { numberOfInputs: 1, numberOfOutputs: 1, outputChannelCount: [1] });
+      node.port.onmessage = (e) => handleChunk(e.data);
+      S.recNode = node;
+    } catch (_) {
+      const sp = S.ctx.createScriptProcessor(2048, 1, 1);
+      sp.onaudioprocess = (e) => handleChunk(new Float32Array(e.inputBuffer.getChannelData(0)));
+      S.recNode = sp;
+    }
+    const mute = S.ctx.createGain();
+    mute.gain.value = 0;
+    S.recNode.connect(mute); mute.connect(S.ctx.destination);
+  }
+
+  function handleChunk(f) {
+    let s = 0;
+    for (let i = 0; i < f.length; i++) s += f[i] * f[i];
+    S.live.db = 10 * Math.log10(s / f.length + 1e-12);
+    S.live.at = performance.now();
+    if (S.rec) S.rec.parts.push(f);
+  }
+
+  async function attachAudio(at) {
+    if (S.aTrack && S.aTrack !== at) S.aTrack.stop();
+    S.aTrack = at;
+    S.aStream = new MediaStream([at]);
+    if (!S.ctx) { micUnavailable(new Error('Este navegador não permite analisar áudio.')); return; }
+    try { await ensureRecorder(); } catch (_) {}
+    if (S.srcNode) { try { S.srcNode.disconnect(); } catch (_) {} }
+    S.srcNode = S.ctx.createMediaStreamSource(S.aStream);
+    S.srcNode.connect(S.recNode);
+    $('micDev').textContent = (at.label || 'Microfone') + ' · ' + String(Math.round(S.ctx.sampleRate / 100) / 10).replace('.', ',') + ' kHz';
+    $('btnTest').disabled = false;
+    at.addEventListener('ended', () => toast('O microfone foi desconectado.'));
+  }
+
+  function meterFrame(t) {
+    requestAnimationFrame(meterFrame);
+    if (!S.ctx || !S.aTrack) return;
+    const db = S.live.db;
+    const pos = clamp((db + 60) / 60, 0, 1);
+    const fill = $('mFill');
+    fill.style.width = (pos * 100).toFixed(1) + '%';
+    fill.dataset.lv = db < -45 ? 'lo' : db < -36 ? 'warn' : db <= -10 ? 'ok' : db <= -4 ? 'warn' : 'bad';
+    if (db >= S.peakHold) { S.peakHold = db; S.peakHoldAt = t; }
+    else if (t - S.peakHoldAt > 1000) S.peakHold = Math.max(db, S.peakHold - 0.5);
+    $('mPeak').style.left = (clamp((S.peakHold + 60) / 60, 0, 1) * 100).toFixed(1) + '%';
+    setText($('mText'), db < -59 ? '−∞' : f0(db) + ' dBFS');
+    const now = performance.now();
+    const stalled = S.live.at ? now - S.live.at > 1500 : now - S.startAt > 3000;
+    if (stalled && !S.testing) setText($('micHint'), 'Sem sinal de áudio. Confira se o microfone está ligado e se o navegador tem permissão.');
+    else if (!S.testing && !$('btnTest').disabled) setText($('micHint'), 'Fale normalmente. A barra deve ficar dentro da faixa azul, sem encostar no vermelho.');
+  }
+
+  /* ---------------- Teste guiado ---------------- */
+  const concat = (parts) => {
+    let n = 0; parts.forEach((p) => { n += p.length; });
+    const out = new Float32Array(n);
+    let o = 0; parts.forEach((p) => { out.set(p, o); o += p.length; });
+    return out;
+  };
+  function recordFor(ms) {
+    return new Promise((res, rej) => {
+      S.rec = { parts: [] };
+      const t0 = performance.now();
+      const iv = setInterval(() => {
+        if (S.cancel) { clearInterval(iv); S.rec = null; rej(new Error('cancel')); }
+        else if (performance.now() - t0 >= ms) { clearInterval(iv); const p = S.rec.parts; S.rec = null; res(concat(p)); }
+      }, 40);
+    });
+  }
+
+  let stepTimer = 0;
+  function setStep(title, sub, ms, reading) {
+    $('stepTitle').textContent = title;
+    $('stepSub').textContent = sub;
+    $('readBox').hidden = !reading;
+    const bar = $('stepBar');
+    bar.style.transition = 'none'; bar.style.width = '0%';
+    void bar.offsetWidth;
+    bar.style.transition = 'width ' + ms + 'ms linear'; bar.style.width = '100%';
+    const end = performance.now() + ms;
+    clearInterval(stepTimer);
+    const upd = () => { $('stepTime').textContent = Math.max(0, Math.ceil((end - performance.now()) / 1000)) + ' s'; };
+    upd(); stepTimer = setInterval(upd, 200);
+  }
+
+  async function runTest() {
+    if (S.testing || !S.ctx || !S.aTrack) return;
+    S.testing = true; S.cancel = false;
+    try { window.speechSynthesis && window.speechSynthesis.cancel(); } catch (_) {}
+    if (S.ctx.state !== 'running') { try { await S.ctx.resume(); } catch (_) {} }
+    document.body.classList.add('testing');
+    $('testIdle').hidden = true; $('testRun').hidden = false; $('micResult').hidden = true;
+    $('selMic').disabled = true;
+    try {
+      setStep('Prepare-se', 'O teste vai começar. Fique em silêncio.', STEPS.prep);
+      await wait(STEPS.prep);
+      setStep('Silêncio', 'Fique quieto(a) e sem mexer em nada. Estou medindo o ruído do ambiente.', STEPS.silence);
+      const silence = await recordFor(STEPS.silence);
+      setStep('Uma palma', 'Bata uma palma forte, curta, e fique em silêncio depois. Serve para medir o eco da sala.', STEPS.clap);
+      const clap = await recordFor(STEPS.clap);
+      setStep('Leia em voz de aula', 'Leia o texto abaixo no volume e na distância em que vai gravar.', STEPS.speech, true);
+      const speech = await recordFor(STEPS.speech);
+      finishTest(silence, clap, speech);
+    } catch (e) {
+      if (!(e && e.message === 'cancel')) { console.warn(e); toast('O teste foi interrompido.'); }
+    } finally {
+      clearInterval(stepTimer);
+      S.testing = false; S.rec = null;
+      document.body.classList.remove('testing');
+      $('testIdle').hidden = false; $('testRun').hidden = true;
+      $('selMic').disabled = false;
+    }
+  }
+
+  function finishTest(silence, clap, speech) {
+    const res = analyzeMic({ silence, clap, speech }, S.ctx.sampleRate);
+    const st = S.aTrack ? S.aTrack.getSettings() : {};
+    const ass = micAssess(res, { label: S.aTrack && S.aTrack.label });
+    S.micRes = res; S.micAss = ass;
+    $('btnTest').textContent = 'Refazer o teste do microfone';
+    const box = $('micResult');
+    box.hidden = false;
+    if (ass.dead) {
+      box.innerHTML = '<div class="mhead mhead--bad"><span class="ic big" aria-hidden="true">×</span><div><div class="mt">Nenhum som chegou</div>' +
+        '<div class="ms">O microfone parece estar no mudo, bloqueado ou ser o dispositivo errado. Escolha outro na lista e refaça o teste.</div></div></div>';
+      return;
+    }
+    const processed = st.noiseSuppression || st.echoCancellation || st.autoGainControl;
+    box.innerHTML =
+      '<div class="mhead mhead--' + ass.worst + '"><span class="ic big" aria-hidden="true">' + GLYPH[ass.worst] + '</span>' +
+      '<div><div class="mt">Microfone: ' + esc(ass.label) + '</div><div class="ms">' +
+      (ass.todo.length ? ass.todo.length + (ass.todo.length === 1 ? ' ponto pode melhorar.' : ' pontos podem melhorar.') : 'Nenhum ajuste necessário.') + '</div></div></div>' +
+      (ass.todo.length ? '<div class="todo"><h4>O que fazer primeiro</h4><ol>' + ass.todo.slice(0, 4).map((it) => '<li>' + esc(it.action) + '</li>').join('') + '</ol></div>' : '') +
+      '<ul class="mitems">' + ass.items.map(mItemHTML).join('') + '</ul>' +
+      '<p class="note">Teste feito com o processamento automático do navegador desligado, para medir o microfone e a sala como são. ' +
+      (processed ? 'Neste aparelho o navegador manteve parte desse processamento ligada, então o ruído medido pode estar menor do que é. ' : '') +
+      'Teams, Zoom e Meet podem aplicar redução de ruído por cima. Os números são estimativas para orientar ajustes, não uma medição de laboratório.</p>';
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function mItemHTML(it) {
+    let g = '';
+    if (it.gauge) {
+      const gg = it.gauge, span = gg.max - gg.min;
+      const pos = (v) => clamp((v - gg.min) / span * 100, 0, 100);
+      g = '<div class="gauge"><div class="gtrack">' + gg.zones.map((z) =>
+        '<i class="seg seg--' + z[2] + '" style="left:' + pos(z[0]).toFixed(2) + '%;width:' + (pos(z[1]) - pos(z[0])).toFixed(2) + '%"></i>').join('') +
+        '<b class="gmark" style="left:' + pos(gg.value).toFixed(2) + '%"></b></div>' +
+        '<div class="gscale"><span>' + esc(gg.minLabel) + '</span><span>' + esc(gg.maxLabel) + '</span></div></div>';
+    }
+    return '<li class="mi mi--' + it.level + '"><span class="ic" aria-hidden="true">' + GLYPH[it.level] + '</span><div class="body">' +
+      '<div class="t"><span>' + esc(it.title) + '</span><span class="v">' + esc(it.value) + '</span></div>' +
+      '<p class="d">' + esc(it.text) + '</p>' + g +
+      (it.action && (it.level === 'warn' || it.level === 'bad') ? '<p class="a"><span aria-hidden="true">→</span> ' + esc(it.action) + '</p>' : '') +
+      '</div></li>';
+  }
+
+  /* ---------------- Relatório ---------------- */
+  function buildReport() {
+    const L = [];
+    const now = new Date();
+    L.push('Check de Estúdio - ' + now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+    L.push('');
+    L.push('CÂMERA: ' + ($('camInfo').textContent || 'não disponível'));
+    const mark = { ok: '[ok]', warn: '[ajustar]', bad: '[problema]', info: '[info]' };
+    GROUPS.forEach((g) => {
+      const rows = S.checks.filter((c) => c.group === g && c.id !== 'wall');
+      if (rows.length) {
+        L.push(g + ':');
+        rows.forEach((c) => L.push('  ' + mark[c.level] + ' ' + c.title + ' (' + c.value + '): ' + c.text + (c.action && c.level !== 'ok' ? ' > ' + c.action : '')));
+      }
+    });
+    L.push('');
+    if (S.micAss && !S.micAss.dead) {
+      L.push('MICROFONE: ' + S.micAss.label + (S.aTrack ? ' (' + S.aTrack.label + ')' : ''));
+      S.micAss.items.forEach((it) => L.push('  ' + mark[it.level] + ' ' + it.title + ' (' + it.value + '): ' + it.text + (it.action ? ' > ' + it.action : '')));
+    } else L.push('MICROFONE: teste ainda não realizado.');
+    return L.join('\n');
+  }
+
+  async function copyReport() {
+    const text = buildReport();
+    try { await navigator.clipboard.writeText(text); toast('Relatório copiado.'); return; } catch (_) {}
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (_) {}
+    document.body.removeChild(ta);
+    toast(ok ? 'Relatório copiado.' : 'Não consegui copiar. Selecione e copie manualmente.');
+  }
+
+  /* ---------------- Tela ligada ---------------- */
+  async function requestWakeLock() {
+    try { if (navigator.wakeLock) S.wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      if (S.ctx && S.ctx.state === 'suspended') S.ctx.resume().catch(() => {});
+      if (S.running) requestWakeLock();
+    }
+  });
+
+  /* ---------------- Eventos ---------------- */
+  $('btnStart').addEventListener('click', startAll);
+  $('btnTest').addEventListener('click', runTest);
+  $('btnCancel').addEventListener('click', () => { S.cancel = true; });
+  $('btnReport').addEventListener('click', copyReport);
+  $('optMirror').addEventListener('change', (e) => { S.mirrored = e.target.checked; applyMirror(); S.sig = ''; });
+  $('optGuides').addEventListener('change', (e) => { S.guides = e.target.checked; drawOverlay(); });
+  const voiceOpt = $('optVoice');
+  if (!('speechSynthesis' in window)) voiceOpt.closest('label').hidden = true;
+  voiceOpt.addEventListener('change', (e) => {
+    S.voice = e.target.checked; S.lastSpoken = '';
+    if (!S.voice) { try { window.speechSynthesis.cancel(); } catch (_) {} }
+  });
+
+  $('selCam').addEventListener('change', async (e) => {
+    try {
+      const s = await gum({ video: videoConstraints(e.target.value) });
+      attachVideo(s.getVideoTracks()[0]);
+      refreshDevices();
+    } catch (err) { toast(explainError(err)); refreshDevices(); }
+  });
+  $('selMic').addEventListener('change', async (e) => {
+    try {
+      const s = await gum({ audio: audioConstraints(e.target.value) });
+      await attachAudio(s.getAudioTracks()[0]);
+      refreshDevices();
+    } catch (err) { toast(explainError(err)); refreshDevices(); }
+  });
+  if (navigator.mediaDevices && navigator.mediaDevices.addEventListener) {
+    navigator.mediaDevices.addEventListener('devicechange', () => { if (S.running) refreshDevices(); });
+  }
+
+  const fsBtn = $('btnFull'), stageEl = $('stage');
+  const fsOn = () => document.fullscreenElement || document.webkitFullscreenElement;
+  if (!(stageEl.requestFullscreen || stageEl.webkitRequestFullscreen)) fsBtn.hidden = true;
+  fsBtn.addEventListener('click', () => {
+    if (fsOn()) { (document.exitFullscreen || document.webkitExitFullscreen).call(document); }
+    else { (stageEl.requestFullscreen || stageEl.webkitRequestFullscreen).call(stageEl); }
+  });
+
+  window.addEventListener('pagehide', () => {
+    [S.vTrack, S.aTrack].forEach((t) => { try { t && t.stop(); } catch (_) {} });
+  });
+
+  if (!window.isSecureContext || !(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) {
+    gateError('Atenção: este navegador ou endereço não libera câmera e microfone. Abra a ferramenta por um endereço HTTPS, no Chrome, Edge ou Safari.');
+  }
+})();
+
+</script>
+</body>
+</html>
